@@ -120,7 +120,7 @@ Form pre-filled with student details.
 * Make sure MongoDB is running and accessible via the URI in `.env`
 * Delete action includes a confirmation page to prevent accidental deletion
 * Uses `ObjectId` from `bson` to work with MongoDB document IDs
-* If you use MongoDB Atlas on macOS, install dependencies again (`pip install -r requirements.txt`). This project now uses `certifi` CA bundle explicitly to avoid common TLS certificate verification failures with `pymongo`. .
+* If you use MongoDB Atlas on macOS, install dependencies again (`pip install -r requirements.txt`). This project now uses `certifi` CA bundle explicitly to avoid common TLS certificate verification failures with `pymongo`. . .
 
 ---
 
