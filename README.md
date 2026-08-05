@@ -407,6 +407,88 @@ Copy the generated HTTPS URL into GitHub Webhooks.
 
 ---
 
+
+# Email Notifications
+
+To receive email notifications for every successful or failed pipeline execution, Jenkins Email Extension Plugin was configured with Gmail SMTP.
+
+### Prerequisites
+
+* Install the following Jenkins plugins:
+
+  * Email Extension Plugin
+  * Mailer Plugin
+* Enable **2-Step Verification** on the Gmail account.
+* Generate a **Google App Password** from the Google Account security settings.
+* Configure SMTP settings in **Manage Jenkins → System → Extended E-mail Notification**.
+
+### SMTP Configuration
+
+| Setting        | Value                                |
+| -------------- | ------------------------------------ |
+| SMTP Server    | smtp.gmail.com                       |
+| SMTP Port      | 587                                  |
+| Authentication | Gmail Username + Google App Password |
+| Security       | TLS Enabled                          |
+
+### Jenkins Credentials
+
+The following credentials were added securely in Jenkins:
+
+| Credential ID | Purpose                      |
+| ------------- | ---------------------------- |
+| `gmail-smtp`  | Gmail SMTP authentication    |
+| `mongo-uri`   | MongoDB connection string    |
+| `secret-key`  | Flask application secret key |
+
+Sensitive information is stored using Jenkins Credentials and is not hardcoded in the repository.
+
+### Pipeline Notifications
+
+A `post` section was added to the `Jenkinsfile` to send email notifications after every pipeline execution.
+
+* **Success Notification**
+
+  * Sent when all stages (Checkout, Install Dependencies, Unit Tests, Docker Build, and Deploy) complete successfully.
+  * Includes:
+
+    * Job Name
+    * Build Number
+    * Build Status
+    * Build URL
+
+* **Failure Notification**
+
+  * Sent when any stage fails.
+  * Includes:
+
+    * Job Name
+    * Build Number
+    * Failure Status
+    * Build URL for troubleshooting
+
+### Jenkinsfile Post Section
+
+The notification logic is implemented using the `emailext` step provided by the Jenkins Email Extension Plugin.
+
+### Verification
+
+1. Push changes to the GitHub repository.
+2. GitHub Webhook triggers the Jenkins pipeline.
+3. Pipeline executes all stages.
+4. Upon completion:
+
+   * A **SUCCESS** email is sent if all stages pass.
+   * A **FAILED** email is sent if any stage fails.
+5. Verify the notification in the configured Gmail inbox.
+
+This implementation satisfies the assignment requirement of sending automated email notifications for both successful and failed CI/CD pipeline executions.
+
+
+---
+
+
+
 # Running the Application Locally
 
 Create virtual environment
