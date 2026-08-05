@@ -5,6 +5,8 @@ pipeline {
     environment {
         IMAGE_NAME = "flask-app"
         CONTAINER_NAME = "flask-container"
+        MONGO_URI = credentials('mongo-uri')
+        SECRET_KEY = credentials('secret-key')
     }
 
     stages {
@@ -30,7 +32,7 @@ pipeline {
             steps {
                 sh '''
                 . venv/bin/activate
-                pytest
+                pytest -v
                 '''
             }
         }
