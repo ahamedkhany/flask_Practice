@@ -12,6 +12,12 @@ app = Flask(__name__)
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 app.secret_key = os.getenv("SECRET_KEY")
 
+if not app.config["MONGO_URI"]:
+    raise RuntimeError("MONGO_URI environment variable is not set.")
+
+if not app.config["SECRET_KEY"]:
+    raise RuntimeError("SECRET_KEY environment variable is not set.")
+
 # Use certifi CA bundle explicitly for cross-platform TLS reliability
 # (notably fixes common macOS certificate verification failures).
 mongo = PyMongo(app, tlsCAFile=certifi.where())

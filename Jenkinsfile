@@ -54,6 +54,8 @@ pipeline {
                 docker run -d \
                   --name ${CONTAINER_NAME} \
                   -p 5000:5000 \
+                  -e MONGO_URI="$MONGO_URI" \
+                  -e SECRET_KEY="$SECRET_KEY" \
                   ${IMAGE_NAME}:${BUILD_NUMBER}
                 '''
             }
