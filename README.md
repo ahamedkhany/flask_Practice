@@ -1,6 +1,6 @@
 # Jenkins CI/CD Pipeline for Flask Application
 
-## Project Overview
+## Project Overview:
 
 This project demonstrates a complete Continuous Integration and Continuous Deployment (CI/CD) pipeline for a Flask-based Python web application using Jenkins.
 
@@ -67,6 +67,7 @@ Flask Application
 ├── Jenkinsfile
 ├── requirements.txt
 ├── test_app.py
+├── screenshots
 ├── start_flask.sh
 ├── templates
 │   ├── add_student.html
@@ -185,13 +186,95 @@ docker version
 
 ---
 
-# Clone Repository
 
-```bash
-git clone <your-github-fork-url>
+# Configuring the Jenkins Pipeline
+
+Follow the below steps to configure the Jenkins Pipeline:
+
+### Step 1: Create a New Pipeline Job
+1. Open **Jenkins Dashboard**.
+2. Click **New Item**.
+3. Enter a job name (e.g., `ahamed-flask-ci-cd`).
+4. Select **Pipeline**.
+5. Click **OK**.
+
+---
+
+### Step 2: Configure GitHub Repository
+1. Open the created pipeline job.
+2. Click **Configure**.
+3. Scroll down to the **Pipeline** section.
+4. Select:
+   - **Definition:** `Pipeline script from SCM`
+   - **SCM:** `Git`
+5. In the **Repository URL**, enter your GitHub repository URL.
+
+Example:
+
+```text
+https://github.com/ahamedkhany/flask_Practice.git
+```
+
+6. If the repository is private, add GitHub credentials. (Skip for public repositories.)
+7. Set the **Branch Specifier**:
+
+```text
+*/main
 ```
 
 ---
+
+### Step 3: Configure the Jenkinsfile
+Under the **Pipeline** section:
+
+- **Script Path:**
+
+```text
+Jenkinsfile
+```
+
+(Keep this value unless the Jenkinsfile is inside another folder.)
+
+---
+
+### Step 4: Enable Automatic Builds
+Under **Build Triggers**, enable:
+
+```text
+✔ GitHub hook trigger for GITScm polling
+```
+
+This allows Jenkins to automatically start a new build whenever code is pushed to the GitHub repository.
+
+---
+
+#### Jenkins pipeline configuration screenshot1
+
+![Jenkins Configurations1](screenshots/jenkins-configure1.png)
+
+
+#### Jenkins pipeline configuration screenshot2
+
+![Jenkins Configurations2](screenshots/jenkins-configure2.png)
+
+
+---
+
+
+### Step 5: Save the Configuration
+Click **Save**.
+
+The pipeline is now configured and ready to execute.
+
+---
+
+### Step 6: Run the Pipeline
+- Click **Build Now** to trigger the first build manually for local testing.
+- After configuring the GitHub webhook, every push to the `main` branch will automatically trigger a new Jenkins build.
+
+
+---
+
 
 # Jenkins Credentials
 
@@ -227,9 +310,25 @@ Value
 Flask Secret Key
 ```
 
+### Credentials configured (Environment variables included)
+
+![Jenkins Credentials](screenshots/jenkins-credentials.png)
+
 ---
 
-# Jenkins Pipeline Stages
+
+# Clone Repository
+
+```bash
+git clone <your-github-fork-url>
+```
+
+
+---
+
+
+
+# Jenkinsfile creation with following stages:
 
 ## Stage 1
 
@@ -309,47 +408,30 @@ Email notifications are sent automatically for
 * Successful Builds
 * Failed Builds
 
----
-
-# Docker Commands
-
-Build image
-
-```bash
-docker build -t flask-app .
-```
-
-Run container
-
-```bash
-docker run -d --name flask-container -p 5000:5000 flask-app
-```
-
-List containers
-
-```bash
-docker ps
-```
-
-Stop container
-
-```bash
-docker stop flask-container
-```
-
-Remove container
-
-```bash
-docker rm flask-container
-```
-
-List images
-
-```bash
-docker images
-```
 
 ---
+
+
+# ngrok Setup
+
+Download ngrok using Microsoft store.
+
+Authenticate
+
+```bash
+ngrok config add-authtoken <YOUR_AUTH_TOKEN>
+```
+
+Expose Jenkins
+
+```bash
+ngrok http 8080
+```
+
+Copy the generated HTTPS URL into GitHub Webhooks.
+
+---
+
 
 # GitHub Webhook Configuration
 
@@ -385,25 +467,15 @@ Events
 Just the push event
 ```
 
----
+### Webhook Cofiguration - Settings in Github
 
-# ngrok Setup
+![Webhook Settings in Github](screenshots/webhook-settings.png)
 
-Download ngrok.
 
-Authenticate
+### Webhook Cofiguration - Delivery in Github
 
-```bash
-ngrok config add-authtoken <YOUR_AUTH_TOKEN>
-```
+![Webhook Delivery in Github](screenshots/webhook-delivery.png)
 
-Expose Jenkins
-
-```bash
-ngrok http 8080
-```
-
-Copy the generated HTTPS URL into GitHub Webhooks.
 
 ---
 
@@ -443,415 +515,102 @@ The following credentials were added securely in Jenkins:
 
 Sensitive information is stored using Jenkins Credentials and is not hardcoded in the repository.
 
-### Pipeline Notifications
-
-A `post` section was added to the `Jenkinsfile` to send email notifications after every pipeline execution.
-
-* **Success Notification**
-
-  * Sent when all stages (Checkout, Install Dependencies, Unit Tests, Docker Build, and Deploy) complete successfully.
-  * Includes:
-
-    * Job Name
-    * Build Number
-    * Build Status
-    * Build URL
-
-* **Failure Notification**
-
-  * Sent when any stage fails.
-  * Includes:
-
-    * Job Name
-    * Build Number
-    * Failure Status
-    * Build URL for troubleshooting
-
-### Jenkinsfile Post Section
-
-The notification logic is implemented using the `emailext` step provided by the Jenkins Email Extension Plugin.
-
-### Verification
-
-1. Push changes to the GitHub repository.
-2. GitHub Webhook triggers the Jenkins pipeline.
-3. Pipeline executes all stages.
-4. Upon completion:
-
-   * A **SUCCESS** email is sent if all stages pass.
-   * A **FAILED** email is sent if any stage fails.
-5. Verify the notification in the configured Gmail inbox.
-
-This implementation satisfies the assignment requirement of sending automated email notifications for both successful and failed CI/CD pipeline executions.
-
 
 ---
-
-
-
-# Running the Application Locally
-
-Create virtual environment
-
-```bash
-python3 -m venv venv
-```
-
-Activate
-
-```bash
-source venv/bin/activate
-```
-
-Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-Run
-
-```bash
-python app.py
-```
-
-Application URL
-
-```
-http://localhost:5000
-```
-
----
-
-# Running Tests
-
-```bash
-pytest -v
-```
-
----
-
-# Environment Variables
-
-The application requires:
-
-```
-MONGO_URI
-
-SECRET_KEY
-```
-
-For local development, these values are stored in a `.env` file.
-
-For Jenkins, the values are securely managed using Jenkins Credentials and injected as environment variables during pipeline execution.
-
----
-
 
 
 # Testing the CI/CD Pipeline
 
-The following tests were performed to verify that the Jenkins CI/CD pipeline works correctly.
+After all the configurations and code setup completed.
+
+#### Step 1: Commit and push your code changes to your repo.
+
+#### Step 2: Automatically build should be triggered in Jenkins, since we have configured webhook in Github to access the Jenkins to trigger the build.
+
+#### Step 3: Verify if all the build stages got passed.
+
+#### Step 4: Check if the container is up and running using 'docker ps' command.
+
+#### Step 5: Go to browser and run the aplication using url: http://localhost:5000
+
+#### Step 6: Verify if notification is sent your email.
 
 ---
 
-## Test 1: Verify Flask Application Locally
 
-Activate the virtual environment:
+## Test 1: Verify Successful Pipeline
 
-```bash
-source venv/bin/activate
-```
 
-Install dependencies:
+### Jenkins Dashboard of the latest build.
 
-```bash
-pip install -r requirements.txt
-```
+![Pipeline build](screenshots/jenkins-pipeline-build.png)
 
-Run the Flask application:
 
-```bash
-python app.py
-```
+### Pipeline build log for Unit Tests
 
-Open the application in a browser:
+![Pipeline build Success Log](screenshots/unit-tests.png)
 
-```text
-http://localhost:5000
-```
 
-**Expected Result**
+### Pipeline build Success log
 
-* Flask application starts successfully.
-* Home page is displayed.
-* CRUD operations work correctly.
+![Pipeline build Success Log](screenshots/jenkins-job-success.png)
 
----
 
-## Test 2: Run Unit Tests Locally
+### Pipeline Stages passed
 
-Execute:
+1.
 
-```bash
-pytest -v
-```
+![Pipeline Stages](screenshots/jenkins-pipeline-step1.png)
 
-**Expected Result**
+2.
 
-* All test cases pass successfully.
-* Pytest displays a summary with all tests marked as PASSED.
+![Pipeline Stages](screenshots/jenkins-pipeline-step2.png)
 
----
+3.
 
-## Test 3: Build Docker Image
+![Pipeline Stages](screenshots/jenkins-pipeline-step3.png)
 
-Build the Docker image:
+4.
 
-```bash
-docker build -t flask-app .
-```
+![Pipeline Stages](screenshots/jenkins-pipeline-step4.png)
 
-Verify the image:
 
-```bash
-docker images
-```
+### Jenkins Webhook Log
 
-**Expected Result**
+![Webhook Log in Jenkins](screenshots/jenkins-webhook-log.png)
 
-* Docker image named `flask-app` is created successfully.
+
+### Notification email
+
+![notification email](screenshots/notification-email.png)
+
 
 ---
 
-## Test 4: Run Docker Container
 
-Run the container:
 
-```bash
-docker run -d \
---name flask-container \
--p 5000:5000 \
-flask-app
-```
+## Test 2: Verify Flask Application
 
-Verify:
 
-```bash
-docker ps
-```
+### Verify in Docker if the container is up and running.
 
-Open:
+![Aplication running in Docker](screenshots/docker-container-flask.png)
 
-```text
-http://localhost:5000
-```
 
-**Expected Result**
+### Verify in Browser
 
-* Flask application is accessible from the browser.
-* Container status is **Up**.
+![Aplication running in browser](screenshots/application-running.png)
+
+
 
 ---
 
-## Test 5: Verify Jenkins Pipeline Manually
 
-Open Jenkins.
 
-Select the pipeline job.
 
-Click:
 
-```text
-Build Now
-```
 
-Monitor the Console Output.
 
-**Expected Result**
-
-All stages execute successfully.
-
-```
-✓ Checkout Source Code
-
-✓ Install Dependencies
-
-✓ Run Unit Tests
-
-✓ Build Docker Image
-
-✓ Deploy Docker Container
-
-✓ Email Notification
-```
-
-Build status should be **SUCCESS**.
-
----
-
-## Test 6: Verify GitHub Webhook Trigger
-
-Modify any source file.
-
-Example:
-
-```text
-README.md
-```
-
-Commit the changes:
-
-```bash
-git add .
-git commit -m "Testing Jenkins Webhook"
-git push origin main
-```
-
-Open Jenkins Dashboard.
-
-**Expected Result**
-
-* GitHub sends a webhook request.
-* Jenkins automatically starts a new build.
-* No manual intervention is required.
-
----
-
-## Test 7: Verify ngrok Tunnel
-
-Start ngrok:
-
-```bash
-ngrok http 8080
-```
-
-Copy the HTTPS URL.
-
-Configure the same URL in the GitHub Webhook.
-
-Verify webhook delivery under:
-
-```text
-GitHub Repository
-
-↓
-
-Settings
-
-↓
-
-Webhooks
-
-↓
-
-Recent Deliveries
-```
-
-**Expected Result**
-
-* Delivery status should be **200 OK**.
-* Jenkins pipeline starts automatically.
-
----
-
-## Test 8: Verify Docker Deployment
-
-Check running containers:
-
-```bash
-docker ps
-```
-
-View logs:
-
-```bash
-docker logs flask-container
-```
-
-**Expected Result**
-
-* Flask container is running.
-* No runtime errors are present.
-* Application is accessible at `http://localhost:5000`.
-
----
-
-## Test 9: Verify MongoDB Atlas Connectivity
-
-Ensure the current public IP address is added to the MongoDB Atlas **Network Access** list.
-
-Run the Flask application or trigger the Jenkins pipeline.
-
-**Expected Result**
-
-* Application connects successfully to MongoDB Atlas.
-* Student records are created, updated, retrieved, and deleted successfully.
-
----
-
-## Test 10: Verify Jenkins Credentials
-
-Confirm that the following credentials are configured in Jenkins:
-
-* `mongo-uri`
-* `secret-key`
-
-Trigger a pipeline build.
-
-**Expected Result**
-
-* Environment variables are injected successfully.
-* Application starts without `.env` being present in the GitHub repository.
-* No `MONGO_URI` or `SECRET_KEY` related errors occur.
-
----
-
-## Test 11: Verify Pipeline Failure
-
-Introduce a deliberate error.
-
-Examples:
-
-* Add an incorrect assertion in `test_app.py`
-* Introduce a syntax error in `app.py`
-
-Commit and push the changes:
-
-```bash
-git add .
-git commit -m "Testing pipeline failure"
-git push origin main
-```
-
-**Expected Result**
-
-* Jenkins stops at the **Run Unit Tests** stage.
-* Docker image is **not** built.
-* Deployment stage is skipped.
-* Build status is **FAILED**.
-* Failure notification email is sent.
-
----
-
-## Test 12: Verify Successful Pipeline After Fix
-
-Remove the intentional error.
-
-Commit and push the fix:
-
-```bash
-git add .
-git commit -m "Fixed unit test"
-git push origin main
-```
-
-**Expected Result**
-
-* All pipeline stages complete successfully.
-* Docker image is rebuilt.
-* Application is redeployed.
-* Success notification email is sent.
 
 ---
 
