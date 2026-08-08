@@ -1,38 +1,222 @@
 name: Flask CI/CD Pipeline
 
+# ============================================================
+# Workflow Triggers
+# ============================================================
 on:
   push:
     branches:
       - main
       - staging
+    tags:
+      - "v*"
 
   workflow_dispatch:
 
+# ============================================================
+# Global Environment Variables
+# ============================================================
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  IMAGE_NAME: flask-app
+
+##############################################################
+# JOBS
+##############################################################
+
 jobs:
-  build-and-test:
+
+##############################################################
+# JOB 1 - CONTINUOUS INTEGRATION
+##############################################################
+
+  build-test:
+
+    name: Build & Test
+
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1 - Checkout repository
+
+      # Checkout Repository
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # Step 2 - Install Python
+      # Install Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      # Step 3 - Install project dependencies
+      # Install Dependencies
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Step 4 - Run unit tests
+      # Execute Unit Tests
       - name: Run Unit Tests
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           pytest -v
+
+##############################################################
+# JOB 2 - BUILD & PUSH DOCKER IMAGE
+##############################################################
+
+  build-and-push:
+
+    name: Build Docker Image & Push to Amazon ECR
+
+    runs-on: ubuntu-latest
+
+    needs: build-test
+
+    outputs:
+      image-tag: ${{ github.sha }}
+
+    steps:
+
+      # Checkout Repository
+      - uses: actions/checkout@v4
+
+      # Configure AWS Credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Login to Amazon ECR
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Build Docker Image
+      - name: Build Docker Image
+        run: |
+
+          docker build \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} \
+            .
+
+      # Push latest tag
+      - name: Push Latest Image
+        run: |
+          docker push \
+            $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      # Push commit SHA tag
+      - name: Push Commit Image
+        run: |
+          docker push \
+            $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+
+##############################################################
+# JOB 3 - DEPLOY TO STAGING
+##############################################################
+
+  deploy-staging:
+
+    name: Deploy to Staging
+
+    needs: build-and-push
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: staging
+
+    if: github.ref == 'refs/heads/staging'
+
+    steps:
+
+      - name: Deploy Application
+
+        uses: appleboy/ssh-action@v1.2.0
+
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+
+          script: |
+
+            aws ecr get-login-password \
+            --region ${{ secrets.AWS_REGION }} \
+            | docker login \
+            --username AWS \
+            --password-stdin \
+            ${{ secrets.ECR_REGISTRY }}
+
+            docker pull \
+            ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+            docker stop flask-app-staging || true
+
+            docker rm flask-app-staging || true
+
+            docker run -d \
+              --restart always \
+              --name flask-app-staging \
+              -p 5001:5000 \
+              -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+              -e SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+              ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+##############################################################
+# JOB 4 - DEPLOY TO PRODUCTION
+##############################################################
+
+  deploy-production:
+
+    name: Deploy to Production
+
+    needs: build-and-push
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+
+      - name: Deploy Application
+
+        uses: appleboy/ssh-action@v1.2.0
+
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+
+          script: |
+
+            aws ecr get-login-password \
+            --region ${{ secrets.AWS_REGION }} \
+            | docker login \
+            --username AWS \
+            --password-stdin \
+            ${{ secrets.ECR_REGISTRY }}
+
+            docker pull \
+            ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+            docker stop flask-app-production || true
+
+            docker rm flask-app-production || true
+
+            docker run -d \
+              --restart always \
+              --name flask-app-production \
+              -p 5002:5000 \
+              -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+              -e SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+              ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
