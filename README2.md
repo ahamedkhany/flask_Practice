@@ -75,7 +75,7 @@ GitHub Actions Runner (Ubuntu)
 
 # Branch Strategy
 
-The repository contains two branches:--
+The repository contains two branches:---
 
 * **main** – Main development branch
 * **staging** – Used for staging deployment
