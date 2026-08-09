@@ -791,6 +791,31 @@ Flask CI/CD Pipeline
 ✓ Build Docker Image
 ✓ Push to ECR
 ```
+#### Code when pushed to main branch:
+
+![build and test](screenshots-github-actions/build-and-pushed-workflow.png)
+
+
+#### Workflow steps:
+
+1.
+
+![build and test](screenshots-github-actions/build-and-test-workflow-steps.png)
+
+2.
+
+![Unit Tests passed](screenshots-github-actions/uunit-tests-passed.png)
+
+3.
+
+![build and push](screenshots-github-actions/build-and-pushed-to-AWS-ECR-steps.png)
+
+4.
+
+![Deploy steps](screenshots-github-actions/deploy-workflow-steps.png)
+
+
+
 
 ### Screenshot 2 — Staging Deployment
 
@@ -802,6 +827,10 @@ Show the successful staging workflow:
 ✓ Deploy Staging
 ```
 
+#### Code when pushed to staging branch:
+
+![Deployment in staging](screenshots-github-actions/staging-deployment.png)
+
 ### Screenshot 3 — Production Deployment
 
 Show:
@@ -812,15 +841,19 @@ Show:
 ✓ Deploy Production
 ```
 
-### Screenshot 4 — Production Approval
+#### Code when pushed to main branch with tag:
 
-If manual approval is configured, capture the GitHub Environment approval screen.
+![Deployment in production](screenshots-github-actions/production-deployment.png)
 
-### Screenshot 5 — Amazon ECR
+
+### Screenshot 4 — Amazon ECR
 
 Show the `flask-app` repository and successfully pushed Docker image/tag.
 
-### Screenshot 6 — EC2 Docker Containers
+![Amazon ECR](screenshots-github-actions/ECR-repo.png)
+
+
+### Screenshot 5 — EC2 Docker Containers
 
 Run:
 
@@ -830,7 +863,12 @@ docker ps
 
 and capture the running staging and production containers.
 
-### Screenshot 7 — Application Test
+
+![Docker Containers](screenshots-github-actions/docker-ps.png)
+
+
+
+### Screenshot 6 — Application Test
 
 Capture the Flask application successfully loading through:
 
@@ -838,11 +876,17 @@ Capture the Flask application successfully loading through:
 http://<EC2_PUBLIC_IP>:5001
 ```
 
+![Staging](screenshots-github-actions/application-in-staging.png)
+
+
 and:
 
 ```text
 http://<EC2_PUBLIC_IP>:5002
 ```
+
+![Staging](screenshots-github-actions/application-in-production.png)
+
 
 ---
 
